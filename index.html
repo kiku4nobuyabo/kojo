@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#193c45">
+  <meta name="description" content="信長の野望・真戦：3城まで同時に試算できる独立型の攻城計算機。オフライン対応・DBなし。">
+  <title>攻城シミュレータ | 信長の野望・真戦</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="calculator.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-head">
+      <div class="mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div>
+        <p class="eyebrow">信長の野望・真戦｜独立ツール</p>
+        <h1>攻城シミュレータ <span class="ver">v0.1</span></h1>
+        <p class="subtitle">この兵器数で、何回・何分で城を落とせる？ 同時3城まで試算。</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel base-settings" aria-labelledby="settings-title">
+        <div class="section-heading">
+          <div><p class="kicker">01 / 共通条件</p><h2 id="settings-title">攻城の前提</h2></div>
+          <button id="reset-button" class="button subtle small" type="button">初期設定に戻す</button>
+        </div>
+        <div class="common-fields">
+          <label class="field"><span class="field-label">使用可能な兵器 <small>部隊</small></span><input id="available" type="number" inputmode="numeric" min="0" max="1000000" step="1" value="40"><span class="hint">3城で共有する部隊数</span></label>
+          <label class="field"><span class="field-label">兵器1部隊の攻城値</span><input id="power" type="number" inputmode="numeric" min="1" max="1000000" step="1" value="290"><span class="hint">全兵器共通の数値</span></label>
+          <label class="field"><span class="field-label">現在体力 <small>全兵器共通</small></span><select id="stamina"><option value="100">100（最大10回）</option><option value="90" selected>90（最大9回）</option><option value="80">80（最大8回）</option><option value="70">70（最大7回）</option><option value="60">60（最大6回）</option><option value="50">50（最大5回）</option><option value="40">40（最大4回）</option><option value="30">30（最大3回）</option><option value="20">20（最大2回）</option><option value="10">10（最大1回）</option><option value="0">0（攻撃不可）</option></select><span class="hint">攻撃1回につき体力10消費</span></label>
+        </div>
+        <div class="inline-rule" aria-label="計算ルール"><span class="rule-icon">i</span><span>攻撃は5分ごとに1回。所要時間は「必要攻撃回数 × 5分」。耐久削りのみの試算です。</span></div>
+      </section>
+
+      <section class="battle-section" aria-labelledby="battle-title">
+        <div class="section-heading roomy"><div><p class="kicker">02 / 部隊を振り分ける</p><h2 id="battle-title">攻城対象</h2></div><div class="count-switch" role="group" aria-label="同時攻城数"><button type="button" data-count="1" class="active" aria-pressed="true">1城</button><button type="button" data-count="2" aria-pressed="false">2城</button><button type="button" data-count="3" aria-pressed="false">3城</button></div></div>
+        <div id="city-grid" class="city-grid"></div>
+      </section>
+
+      <section class="panel results" aria-labelledby="results-title">
+        <div class="section-heading"><div><p class="kicker">03 / 計算結果</p><h2 id="results-title">全体判定</h2></div><button id="allocate-button" class="button secondary small" type="button">必要部隊数で配分</button></div>
+        <div id="overall-banner" class="overall-banner" role="status" aria-live="polite"></div>
+        <div class="summary-grid">
+          <div class="summary-item"><span class="summary-label">手持ちの兵器</span><strong id="total-available">—</strong><span class="summary-unit">部隊</span></div>
+          <div class="summary-item"><span class="summary-label">現在の割当</span><strong id="total-allocated">—</strong><span class="summary-unit">部隊</span></div>
+          <div class="summary-item"><span class="summary-label">全城の最低必要数</span><strong id="total-required">—</strong><span class="summary-unit">部隊</span></div>
+          <div class="summary-item"><span class="summary-label">未配分 / 超過</span><strong id="total-spare">—</strong><span class="summary-unit">部隊</span></div>
+        </div>
+        <div class="graph-wrap">
+          <div class="graph-heading"><h3>城の残り耐久度</h3><p>開始からの経過時間と、各城の残り耐久率</p></div>
+          <div id="chart-legend" class="chart-legend"></div>
+          <div id="timeline" class="timeline" aria-label="残耐久率の推移"></div>
+          <p class="hint below-chart">グラフは開始時点から5分ごとの耐久減少を示します。体力上限に達した部隊は、それ以降攻撃しません。</p>
+        </div>
+        <div class="result-actions"><button id="copy-button" type="button" class="button primary">結果をテキストでコピー</button><span id="copy-feedback" class="feedback" aria-live="polite"></span></div>
+      </section>
+
+      <section class="panel saved" aria-labelledby="saved-title">
+        <div class="section-heading"><div><p class="kicker">04 / この端末に保存</p><h2 id="saved-title">試算条件の保存</h2></div></div>
+        <p class="small-copy">入力中の条件はブラウザ内に自動保存されます。名前を付けて複数の条件も保存できます（最大20件）。</p>
+        <div class="saved-form"><label class="field save-name"><span class="field-label">保存名</span><input id="preset-name" type="text" maxlength="40" placeholder="例：朝のLv5・Lv6同時攻城"></label><button id="save-button" class="button secondary" type="button">この条件を保存</button></div>
+        <div class="saved-controls"><label class="field"><span class="field-label">保存済みの条件</span><select id="preset-list"><option value="">保存なし</option></select></label><button id="load-button" class="button subtle" type="button">読込</button><button id="delete-button" class="button danger-outline" type="button">削除</button></div>
+        <p id="storage-feedback" class="feedback" role="status" aria-live="polite"></p>
+        <p class="privacy"><span aria-hidden="true">●</span> 完全ローカル動作。サーバー・DB・通信・端末間同期は使いません。ブラウザのデータ削除時には保存内容も失われます。</p>
+      </section>
+
+      <details class="notes panel"><summary>計算の前提・注意点を見る</summary><div class="notes-content"><p>Lv4〜Lv7の耐久度初期値は実機で収集された数値を採用。<strong>Lv4：15,000 / Lv5：50,000 / Lv6：100,000 / Lv7：200,000</strong>。関所などは「任意設定」で耐久度を変更できます。</p><p>1部隊の攻城値、全兵器共通の体力、攻撃間隔5分、攻撃時の体力消費10を前提に、必要攻撃回数は <strong>耐久度 ÷（部隊数 × 攻城値）を切り上げ</strong> て計算します。部隊数が0の場合は計算不能として扱います。</p><p>実際の体力で攻撃できる最大回数は10回以下です。体力で許される回数より必要回数が多い場合は「不成立」とし、所要時間は理論値として区別して表示します。50分以下は時間上は問題なし、55分はギリギリ、60分は危険、60分超は警告です。ただし現行の最大10回・体力100の条件では55分以上は体力不足となります。</p><p><strong>駐城守備軍の殲滅、殲滅時間、兵器到着時差、途中離脱、士気・戦法・兵損、城の回復開始から1時間の挙動</strong>は、この計算に含みません。各城に必要な「攻城耐久削り」の目安として使ってください。実際の攻城成否を保証するものではありません。</p></div></details>
+    </main>
+    <footer>信長の野望・真戦｜攻城シミュレータ v0.1 <span>単体動作・オフライン対応</span></footer>
+  </div>
+</body>
+</html>
